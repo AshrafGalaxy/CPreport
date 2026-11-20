@@ -1,0 +1,201 @@
+"""
+build_report.py
+---------------
+Master automated compiler for academic engineering course project reports.
+Adheres strictly to the institutional standards of VIT Pune, IITs, and technical universities.
+
+Usage:
+    python scripts/build_report.py
+"""
+
+import os
+import sys
+import json
+import docx
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_TABLE_ALIGNMENT
+
+# Add scripts directory to path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from math_omml import add_omml_equation
+from table_styler import apply_defensive_table_formatting, set_cell_shading, set_cell_padding, apply_clean_table_borders
+from figure_manager import add_scaled_figure
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_PATH = os.path.join(ROOT_DIR, "config", "report_config.json")
+OUTPUT_DOCX = os.path.join(ROOT_DIR, "Course_Project_Report.docx")
+OUTPUT_PDF = os.path.join(ROOT_DIR, "Course_Project_Report.pdf")
+
+def format_para(doc, text, align=WD_ALIGN_PARAGRAPH.JUSTIFY, size=12, bold=False, italic=False, space_after=6, space_before=0, line_spacing=1.5):
+    """Normalized paragraph builder avoiding stretched words under full justification."""
+    clean = " ".join(str(text).split())
+    p = doc.add_paragraph()
+    p.alignment = align
+    p.paragraph_format.space_before = Pt(space_before)
+    p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.line_spacing = line_spacing
+
+    run = p.add_run(clean)
+    run.font.name = "Times New Roman"
+    run.font.size = Pt(size)
+    run.font.bold = bold
+    run.font.italic = italic
+    run.font.color.rgb = RGBColor(0x0F, 0x17, 0x2A)
+    return p
+
+def main():
+    if not os.path.exists(CONFIG_PATH):
+        print(f"Error: Missing configuration at {CONFIG_PATH}")
+        sys.exit(1)
+
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+
+    inst = cfg["institution"]
+    proj = cfg["project"]
+    team = cfg["team_members"]
+
+    doc = docx.Document()
+
+    # 1. Page Margins (Left 1.25" Binding Gutter, 1.0" Others)
+    for sec in doc.sections:
+        sec.top_margin = Inches(1.0)
+        sec.bottom_margin = Inches(1.0)
+        sec.left_margin = Inches(1.25)
+        sec.right_margin = Inches(1.0)
+        sec.header_distance = Inches(0.5)
+        sec.footer_distance = Inches(0.5)
+
+    # 2. Cover Page
+    format_para(doc, inst["trust"], align=WD_ALIGN_PARAGRAPH.CENTER, size=11, bold=True, space_after=2)
+    format_para(doc, inst["college_name"], align=WD_ALIGN_PARAGRAPH.CENTER, size=14, bold=True, space_after=2)
+    format_para(doc, inst["college_tagline"], align=WD_ALIGN_PARAGRAPH.CENTER, size=10, italic=True, space_after=12)
+
+    # Optional Logo
+    logo_rel = inst.get("logo_path", "assets/VIT.png")
+    logo_abs = os.path.join(ROOT_DIR, logo_rel)
+    if os.path.exists(logo_abs):
+        p_logo = doc.add_paragraph()
+        p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_logo.paragraph_format.space_after = Pt(12)
+        p_logo.add_run().add_picture(logo_abs, width=Inches(1.25))
+
+    format_para(doc, f"Academic Year: {inst['academic_year']}", align=WD_ALIGN_PARAGRAPH.CENTER, size=11, bold=True, space_after=14)
+    format_para(doc, f"{proj['course_name']} Course Project Report on", align=WD_ALIGN_PARAGRAPH.CENTER, size=12, bold=True, space_after=6)
+    format_para(doc, f"“{proj['project_title']}”", align=WD_ALIGN_PARAGRAPH.CENTER, size=15, bold=True, space_after=16)
+
+    format_para(doc, "SUBMITTED IN PARTIAL FULFILLMENT OF THE REQUIREMENTS FOR THE DEGREE OF", align=WD_ALIGN_PARAGRAPH.CENTER, size=9.5, space_after=2)
+    format_para(doc, inst["degree"], align=WD_ALIGN_PARAGRAPH.CENTER, size=11, bold=True, space_after=2)
+    format_para(doc, f"OF {inst['college_name']}", align=WD_ALIGN_PARAGRAPH.CENTER, size=11, bold=True, space_after=16)
+
+    format_para(doc, "SUBMITTED BY", align=WD_ALIGN_PARAGRAPH.CENTER, size=10, bold=True, space_after=4)
+    for m in team:
+        format_para(doc, f"{m['name']} (Roll No. {m['roll_no']} | PRN: {m['prn']})", align=WD_ALIGN_PARAGRAPH.CENTER, size=11, bold=True, space_after=2)
+
+    format_para(doc, "\nUNDER THE GUIDANCE OF", align=WD_ALIGN_PARAGRAPH.CENTER, size=10, bold=True, space_after=4)
+    format_para(doc, f"“{proj['guide_salutation']} {proj['guide_name']}”", align=WD_ALIGN_PARAGRAPH.CENTER, size=12, bold=True, space_after=16)
+
+    format_para(doc, f"{inst['department']}, {inst['city_pincode']}", align=WD_ALIGN_PARAGRAPH.CENTER, size=10, bold=True, space_after=0)
+    doc.add_page_break()
+
+    # 3. Certificate Page
+    format_para(doc, inst["trust"], align=WD_ALIGN_PARAGRAPH.CENTER, size=10, bold=True, space_after=2)
+    format_para(doc, inst["college_name"], align=WD_ALIGN_PARAGRAPH.CENTER, size=13, bold=True, space_after=2)
+    format_para(doc, inst["city_pincode"], align=WD_ALIGN_PARAGRAPH.CENTER, size=10, bold=True, space_after=16)
+
+    format_para(doc, "CERTIFICATE", align=WD_ALIGN_PARAGRAPH.CENTER, size=15, bold=True, space_after=16)
+
+    cert_text = (
+        f"This is to certify that the Course Project titled “{proj['project_title']}” submitted by "
+        + ", ".join([f"{m['name']} (Roll No. {m['roll_no']}, PRN: {m['prn']})" for m in team])
+        + f" is in partial fulfillment for the award of Degree of {inst['degree']} of {inst['college_name']}. "
+        f"This project report is a record of bonafide work carried out by them under my guidance during the academic year {inst['academic_year']}."
+    )
+    format_para(doc, cert_text, align=WD_ALIGN_PARAGRAPH.JUSTIFY, size=11.5, space_after=36)
+
+    sig_tbl = doc.add_table(rows=2, cols=2)
+    sig_tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    sig_tbl.cell(0, 0).text = f"{proj['guide_salutation']} {proj['guide_name']}\nProject Guide"
+    sig_tbl.cell(0, 1).text = f"{proj['hod_name']}\n{proj['hod_designation']}"
+    sig_tbl.cell(1, 0).text = f"Place: {inst['place']}\nDate: {inst['submission_date']}"
+    sig_tbl.cell(1, 1).text = ""
+    apply_defensive_table_formatting(sig_tbl)
+    doc.add_page_break()
+
+    # 4. Project Details Page
+    format_para(doc, "PROJECT DETAILS", align=WD_ALIGN_PARAGRAPH.CENTER, size=14, bold=True, space_after=14)
+    format_para(doc, f"Group No :   {proj['group_number']}\nMembers:", align=WD_ALIGN_PARAGRAPH.LEFT, size=11, bold=True, space_after=6)
+
+    stud_table = doc.add_table(rows=1 + len(team), cols=4)
+    stud_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    apply_clean_table_borders(stud_table)
+    apply_defensive_table_formatting(stud_table)
+
+    headers = ["Sr. No.", "Roll No.", "Student Name", "PRN"]
+    for c_idx, h in enumerate(headers):
+        c = stud_table.rows[0].cells[c_idx]
+        c.text = h
+        set_cell_shading(c, "E2E8F0")
+        set_cell_padding(c)
+
+    for idx, m in enumerate(team):
+        r = stud_table.rows[1 + idx]
+        r.cells[0].text = str(idx + 1)
+        r.cells[1].text = str(m["roll_no"])
+        r.cells[2].text = str(m["name"])
+        r.cells[3].text = str(m["prn"])
+        for c_idx in range(4):
+            set_cell_padding(r.cells[c_idx])
+
+    p_meta = doc.add_paragraph()
+    p_meta.paragraph_format.space_before = Pt(12)
+    p_meta.paragraph_format.line_spacing = 1.4
+    meta_runs = [
+        ("Academic Year\t:  ", True), (f"{inst['academic_year']}\n", False),
+        ("Project Title\t:  ", True), (f"{proj['project_title']}\n", False),
+        ("Project Area\t:  ", True), (f"{proj['project_area']}\n", False),
+        ("Internal Guide\t:  ", True), (f"{proj['guide_salutation']} {proj['guide_name']}", False)
+    ]
+    for m_text, m_bold in meta_runs:
+        r = p_meta.add_run(m_text)
+        r.font.name = "Times New Roman"
+        r.font.size = Pt(11)
+        r.bold = m_bold
+
+    format_para(doc, "\nSignature of Internal Guide: _____________________", align=WD_ALIGN_PARAGRAPH.RIGHT, size=11, bold=True, space_after=0)
+    doc.add_page_break()
+
+    # 5. Executive Summary
+    format_para(doc, "EXECUTIVE SUMMARY", align=WD_ALIGN_PARAGRAPH.CENTER, size=14, bold=True, space_after=14)
+    exec_summary = (
+        f"This report presents the complete research, algorithmic formulation, cyber-physical architecture, and empirical evaluation for "
+        f"“{proj['project_title']}” conducted as part of the {proj['course_name']} curriculum at {inst['college_name']}. "
+        "The project addresses critical engineering trade-offs through an integrated methodology combining modern computational models, "
+        "rigorous physical constraints, and full-stack software verification."
+    )
+    format_para(doc, exec_summary, align=WD_ALIGN_PARAGRAPH.JUSTIFY, size=12, space_after=14)
+    doc.add_page_break()
+
+    # 6. Chapters
+    chapters_dir = os.path.join(ROOT_DIR, "chapters")
+    chapter_files = sorted([f for f in os.listdir(chapters_dir) if f.endswith(".md")])
+    for ch_file in chapter_files:
+        ch_path = os.path.join(chapters_dir, ch_file)
+        with open(ch_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        if lines:
+            ch_title = lines[0].replace("#", "").strip()
+            format_para(doc, ch_title, align=WD_ALIGN_PARAGRAPH.LEFT, size=16, bold=True, space_after=14)
+            body_text = "".join(lines[1:]).strip()
+            format_para(doc, body_text, align=WD_ALIGN_PARAGRAPH.JUSTIFY, size=12, space_after=12)
+
+        doc.add_page_break()
+
+    # Save
+    doc.save(OUTPUT_DOCX)
+    print(f"Report compiled successfully: {OUTPUT_DOCX}")
+
+if __name__ == "__main__":
+    main()
