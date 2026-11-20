@@ -1,0 +1,46 @@
+{
+  "institution": {
+    "trust": "BANSILAL RAMNATH AGARWAL CHARITABLE TRUST'S",
+    "college_name": "VISHWAKARMA INSTITUTE OF TECHNOLOGY",
+    "college_tagline": "(An Autonomous Institute affiliated to Savitribai Phule Pune University)",
+    "city_pincode": "PUNE – 411037",
+    "department": "DEPARTMENT OF CSE (DATA SCIENCE)",
+    "degree": "BACHELOR OF TECHNOLOGY IN \"CSE(Data Science)\"",
+    "academic_year": "2025 - 2026",
+    "submission_date": "16/11/2026",
+    "place": "VIT, Pune",
+    "logo_path": "assets/VIT.png"
+  },
+  "project": {
+    "course_name": "Course Project",
+    "project_title": "Project Title: Subtitle of the Engineering Investigation",
+    "project_area": "Artificial Intelligence & Computational Engineering",
+    "group_number": "14",
+    "guide_name": "Dr. Faculty Mentor",
+    "guide_salutation": "Prof. Dr.",
+    "hod_name": "Dr. Department Head",
+    "hod_designation": "HOD, CSE(DS)"
+  },
+  "team_members": [
+    {
+      "name": "Student One",
+      "roll_no": "01",
+      "prn": "12410001"
+    },
+    {
+      "name": "Student Two",
+      "roll_no": "02",
+      "prn": "12410002"
+    },
+    {
+      "name": "Student Three",
+      "roll_no": "03",
+      "prn": "12410003"
+    },
+    {
+      "name": "Student Four",
+      "roll_no": "04",
+      "prn": "12410004"
+    }
+  ]
+}
