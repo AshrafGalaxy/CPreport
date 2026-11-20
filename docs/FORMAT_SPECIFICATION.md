@@ -1,6 +1,6 @@
 # Academic Course Project Report Format Specification
 
-This document defines the strict typographic, architectural, and layout guidelines for undergraduate and postgraduate engineering course project reports. Adherence to these guidelines ensures full compliance with institutional standards (such as **VIT Pune**, **IITs**, and autonomous technical universities).
+This document defines the strict typographic, architectural, and layout guidelines for undergraduate and postgraduate engineering course project reports. Adherence to these guidelines ensures full compliance with institutional standards of **Vishwakarma Institute of Technology (VIT Pune)**.
 
 ---
 

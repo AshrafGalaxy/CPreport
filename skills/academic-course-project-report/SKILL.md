@@ -1,14 +1,14 @@
 ---
 name: academic-course-project-report
-description: Generates publication-grade, fully compliant academic course project reports adhering strictly to institutional engineering guidelines (such as the VIT Pune Course Project format). Handles front matter, certificate pages, native OMML math equations, zero-orphan tables, scaled-in figures, and accurate 2-pass Table of Contents page synchronization into both DOCX and PDF formats.
+description: Generates publication-grade, fully compliant academic course project reports adhering strictly to institutional engineering guidelines (specifically modeled after the VIT Pune Course Project format). Handles front matter, certificate pages, native OMML math equations, zero-orphan tables, scaled-in figures, PyMuPDF page-by-page visual auditing, and accurate 2-pass Table of Contents page synchronization into both DOCX and PDF formats.
 ---
 
-# Academic Course Project Report Generation Skill
+# Academic Course Project Report Generation Skill (VIT Pune Format)
 
-This skill provides the comprehensive standard, structural rules, and automated compilation pipeline for generating engineering course project reports that adhere 100% to strict institutional guidelines (specifically modeled after the Vishwakarma Institute of Technology, Pune B.Tech Course Project Format).
+This skill provides the comprehensive standard, structural rules, and automated compilation pipeline for generating engineering course project reports that adhere 100% to strict institutional guidelines (modeled after the **Vishwakarma Institute of Technology, Pune B.Tech Course Project Format**).
 
 Use this skill whenever:
-- The user requests a course project report, capstone report, semester project documentation, or academic submission for ANY engineering course (e.g., Soft Computing, Machine Learning, Operating Systems, Computer Networks, Database Systems, Cloud Computing, etc.).
+- The user requests a course project report, capstone report, semester project documentation, or academic submission for ANY course (e.g., Soft Computing, Machine Learning, Operating Systems, Computer Networks, Database Systems, Cloud Computing, etc.).
 - The output must strictly follow formal formatting: Title page, Certificate, Project Details page, Acknowledgement, Abstract, Table of Contents, List of Figures, List of Tables, Chapter Hierarchy, IEEE References, and Appendices.
 
 ---
@@ -22,7 +22,7 @@ All generated documents MUST adhere to these exact typographic and structural co
 | **Typography (Body)** | Times New Roman, 12pt, Regular | Standard academic requirement across all chapters. |
 | **Line Spacing** | 1.5 Lines, 6pt Space After, 0pt Before | Mandatory for readability and faculty grading annotations. |
 | **Paragraph Alignment** | Full Justification (`JUSTIFY`) | Straight left and right margins. All hard line breaks inside paragraphs must be stripped to prevent Word spacing stretch. |
-| **Page Margins** | Left: **1.25"** (or 1.5" for binding)<br>Right: **1.0"**<br>Top: **1.0"**<br>Bottom: **1.0"** | Leaves sufficient gutter on the left side for spiral or hardbound binding without clipping text. |
+| **Page Margins** | Left: **1.25"** (binding gutter)<br>Right: **1.0"**<br>Top: **1.0"**<br>Bottom: **1.0"** | Leaves sufficient gutter on the left side for spiral or hardbound binding without clipping text. |
 | **Heading 1 (Chapter)** | Times New Roman, 16pt, Bold, Centered/Left | E.g., `CHAPTER 1: INTRODUCTION` (All caps, starts on a fresh page). |
 | **Heading 2 (Section)** | Times New Roman, 14pt, Bold, Left | E.g., `1.1 Problem Motivation` |
 | **Heading 3 (Sub-section)** | Times New Roman, 12pt, Bold, Left | E.g., `1.1.1 Boundary Constraints` |
@@ -40,7 +40,7 @@ Every generated report MUST follow this exact sequential structure:
 
 ```
 ├── FRONT MATTER (Roman numerals: i, ii, iii... Cover page unnumbered)
-│   ├── 1. Title / Cover Page (College crest, institute trust, title, degree, student names & PRNs/Rolls, guide, academic year)
+│   ├── 1. Title / Cover Page (College crest, trust, title in bold red, degree, student names & PRNs/Rolls, guide, academic year)
 │   ├── 2. Certificate Page (Formal bonafide statement, guide signature, HOD signature, place, date)
 │   ├── 3. Project Details Page (Group number, member table with roll numbers, guide signature block)
 │   ├── 4. Acknowledgement & Declaration
@@ -48,7 +48,7 @@ Every generated report MUST follow this exact sequential structure:
 │   ├── 6. Table of Contents (With exact physical page numbers)
 │   ├── 7. List of Figures (With exact page numbers)
 │   ├── 8. List of Tables (With exact page numbers)
-│   └── 9. List of Abbreviations (3-column clean table)
+│   └── 9. List of Abbreviations (4-column clean table)
 │
 ├── BODY CHAPTERS (Arabic numerals: 1, 2, 3...)
 │   ├── Chapter 1: Introduction (Background, Motivation, Problem Statement, Objectives, Scope)
@@ -66,61 +66,28 @@ Every generated report MUST follow this exact sequential structure:
 
 ---
 
-## 3. The 5 Core Engineering Implementations (Why It Works)
+## 3. The 4-Stage Agent Execution & Verification Lifecycle
 
-### Pillar 1: Native OMML Math Equations
-Do NOT paste raw LaTeX code or low-resolution raster images into Word. Convert LaTeX to MathML using `latex2mathml`, then transform MathML to native Microsoft Office Math (`OMML`) via `MML2OMML.XSL` or insert Office Open XML math runs (`<m:oMathPara>`).
-Place each equation inside a 1-row, 2-column borderless table:
-- Left cell (85% width): Centered equation.
-- Right cell (15% width): Right-aligned equation number `(3.1)`.
+To achieve 100% compliance without formatting defects, the agent executes four distinct phases:
 
-### Pillar 2: Zero Table Orphans
-Tables that break awkwardly across pages look amateurish. Enforce two critical XML attributes via `python-docx`:
-```python
-# Prevent row from splitting in half across a page boundary
-for row in table.rows:
-    trPr = row._tr.get_or_add_trPr()
-    trPr.append(parse_xml(r'<w:cantSplit xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
+### Phase 1: Construction Engine (Python-docx + OMML)
+- Builds document using `python-docx` with defensive OpenXML tags.
+- Converts LaTeX to native Microsoft Office Math (`OMML`) XML using `latex2mathml` and `MML2OMML.XSL`.
+- Enforces `<w:cantSplit/>` on all table rows and `<w:tblHeader/>` on row 0.
+- Binds figure paragraphs to captions via `keep_with_next = True`.
 
-# Repeat header on subsequent pages if table overflows
-header_trPr = table.rows[0]._tr.get_or_add_trPr()
-header_trPr.append(parse_xml(r'<w:tblHeader xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
-```
+### Phase 2: Native Word COM Export (True Pagination)
+- Uses Microsoft Word automation (`win32com.client`) to open the `.docx` and export the initial `.pdf` via `doc.SaveAs(PDF_PATH, FileFormat=17)`.
+- Guarantees identical pagination between Word and PDF.
 
-### Pillar 3: Defensive Caption and Image Binding
-To prevent a figure from appearing at the bottom of a page with its caption orphaned at the top of the next page:
-```python
-p_img = doc.add_paragraph()
-p_img.paragraph_format.keep_with_next = True
-p_img.add_run().add_picture(img_path, width=Inches(6.8))
+### Phase 3: Page-by-Page Visual & Textual Audit (PyMuPDF)
+- Opens the PDF using `fitz` (PyMuPDF) and audits:
+  1. **Page 1 (Cover):** Verifies red title span (`0xC00000`/`0xFF0000`), VIT crest, student names and PRNs.
+  2. **Page 2 (Certificate):** Confirms Guide & HOD signatures, Place, and Date fit on Page 2 with ZERO spillover to Page 3.
+  3. **Page 3 (Project Details):** Verifies group number and roll numbers are sorted properly.
+  4. **Screenshot Extraction:** Extracts high-resolution PNG images of every page (`page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0))`) into an audit folder to visually verify that there are zero orphaned headings, zero split tables, and zero running headers.
 
-p_cap = doc.add_paragraph('Figure 4.1: Architecture Data Flow', style='Caption')
-p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
-```
-
-### Pillar 4: Whitespace Normalization Before Justification
-When using `WD_ALIGN_PARAGRAPH.JUSTIFY` in Word, any embedded `\n` or double spaces within a paragraph causes Word's justification engine to stretch remaining words across the entire line. Always normalize paragraphs:
-```python
-clean_text = ' '.join(raw_text.split())
-p = doc.add_paragraph(clean_text)
-p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-```
-
-### Pillar 5: Two-Pass Accurate Page Number Synchronization
-Never hardcode Table of Contents page numbers.
-- **Pass 1:** Generate the initial `.docx` and convert to `.pdf` via Word COM or PyMuPDF.
-- **Scan:** Use `pypdf` or `pymupdf` (fitz) to search for Heading strings and extract their actual physical page numbers.
-- **Pass 2:** Inject the exact physical page numbers into the TOC, List of Figures, and List of Tables before finalizing the document.
-
----
-
-## 4. Reusable Compilation Workflow
-
-When building a report for any course:
-1. Define metadata in a clean dictionary or `report_config.json`:
-   - `course_name`, `project_title`, `group_no`, `team_members` (names, PRNs, roll numbers).
-   - `guide_name`, `guide_salutation` ("Prof. Dr."), `hod_name`, `academic_year`, `submission_date`.
-2. Author chapters in modular Markdown files under `chapters/`.
-3. Generate or save high-resolution figures under `figures/` (at least 300 DPI).
-4. Run the master compilation script with Python 3.12 (`py -3.12 build_report.py`).
-5. Verify output using the PDF page audit checklist.
+### Phase 4: Two-Pass Table of Contents Synchronization
+- Scans the generated PDF to extract the exact physical page numbers for all headings, figures, and tables.
+- Injects these physical page numbers into the Word document's Table of Contents, List of Figures, and List of Tables.
+- Re-exports and verifies the final PDF.

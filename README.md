@@ -1,6 +1,6 @@
-# Academic Course Project Report Generator & Format Standard
+# VIT Pune Course Project Report Generator & Format Standard
 
-A universal, production-grade report generator and format standard designed to produce **100% compliant, publication-grade engineering course project reports** adhering strictly to institutional requirements (including **Vishwakarma Institute of Technology (VIT Pune)**, **IITs**, **NITs**, and autonomous universities).
+A production-grade report generator and format standard designed to produce **100% compliant, publication-grade engineering course project reports** adhering strictly to the official guidelines of **Vishwakarma Institute of Technology (VIT Pune)**, Department of Computer Engineering / CSE (Data Science).
 
 ---
 
@@ -13,7 +13,7 @@ Academic project reports often suffer from formatting degradations:
 - Tables splitting mid-row across page breaks with missing headers.
 - Trailing 2-line pages, orphaned headings, and captions detached from figures.
 
-This repository provides an **automated, space-aware engineering compilation pipeline** along with **reusable templates, custom AI skills, and reference outputs** so that students and AI agents can produce flawless academic reports for **any course** in minutes.
+This repository provides an **automated, space-aware engineering compilation pipeline** along with **reusable templates, custom AI skills, and reference outputs** so that students and AI agents can produce flawless academic reports for **any VIT course** in minutes.
 
 ---
 
@@ -48,7 +48,7 @@ Output: Generates `Course_Project_Report.docx` and `Course_Project_Report.pdf`.
 
 ---
 
-## 📐 Golden Format Specification
+## 📐 Golden Format Specification (VIT Pune B.Tech Format)
 
 | Element | Specification | Technical Enforcement |
 | :--- | :--- | :--- |
@@ -75,12 +75,23 @@ Rather than embedding low-resolution raster images or raw LaTeX code, equations 
 
 ---
 
-## 🏛️ Institutional Logo Support
+## 🏛️ Official Institutional Logo
 
-Support for official college crests is built into the cover and certificate layouts:
+Support for the official VIT Pune crest is built into the cover and certificate layouts:
 - **VIT Pune Logo:** `assets/VIT.png`
-- **IIT / University Crest:** Replace or configure in `assets/IIT_Logo_Template.png`
-- Configurable height (typically 1.2"–1.4" centered) without distorting page flow.
+- Configurable height (calibrated to 1.2" centered) without distorting page flow.
+
+---
+
+## 🔍 Agent Verification & Page Audit Process
+
+A key innovation of this repository is the **automated page-by-page visual and textual audit** performed by the AI agent during report creation:
+1. **Pass 1:** Generate initial Word document and export draft PDF via Word COM.
+2. **Page Extraction:** Extract each physical PDF page as a high-resolution 144–300 DPI screenshot (`page.get_pixmap()`) using PyMuPDF (`fitz`).
+3. **Automated Audit:** Verify that the Certificate Page fits completely on Page 2 with zero spillover, check title red highlights, verify student roll numbers, and detect any table or heading orphans.
+4. **Pass 2 Synchronization:** Extract exact physical page numbers for all sections and inject them into the Table of Contents, List of Figures, and List of Tables.
+
+For a full step-by-step breakdown of how the agent executes this, see [`docs/AGENT_WORKFLOW_AND_PAGE_AUDIT_GUIDE.md`](docs/AGENT_WORKFLOW_AND_PAGE_AUDIT_GUIDE.md).
 
 ---
 
@@ -88,18 +99,31 @@ Support for official college crests is built into the cover and certificate layo
 
 ```
 ├── README.md                              <-- Project guide and overview
+├── SETUP_GUIDE.md                         <-- Quick setup instructions
+├── requirements.txt                       <-- Python dependencies (python-docx, Pillow, etc.)
+├── .gitignore                             <-- Clean ignore rules
+│
 ├── config/
 │   └── report_config.json                 <-- Project metadata configuration
+│
+├── assets/
+│   └── VIT.png                            <-- Official VIT Pune crest
+│
 ├── skills/
 │   └── academic-course-project-report/
 │       └── SKILL.md                       <-- Antigravity / AI Agent custom skill
+│
 ├── docs/
-│   └── FORMAT_SPECIFICATION.md            <-- In-depth formatting rulebook
+│   ├── FORMAT_SPECIFICATION.md            <-- In-depth formatting rulebook
+│   └── AGENT_WORKFLOW_AND_PAGE_AUDIT_GUIDE.md  <-- Agent page audit & verification guide
+│
 ├── scripts/
 │   ├── build_report.py                    <-- Master report compiler
 │   ├── math_omml.py                       <-- LaTeX to native OMML converter
 │   ├── table_styler.py                    <-- Defensive table formatting
-│   └── figure_manager.py                  <-- Figure scaling & caption binding
+│   ├── figure_manager.py                  <-- Figure scaling & caption binding
+│   └── curated_all_scripts.py             <-- Complete 15-script reference compendium
+│
 ├── chapters/                              <-- Modular chapter templates
 │   ├── 01_introduction.md
 │   ├── 02_literature_review.md
@@ -109,10 +133,8 @@ Support for official college crests is built into the cover and certificate layo
 │   ├── 06_results_and_discussion.md
 │   ├── 07_conclusion_and_future_scope.md
 │   └── 08_references.md
-├── assets/
-│   ├── VIT.png                            <-- Official VIT crest
-│   └── IIT_Logo_Template.png              <-- Generic / IIT crest template
-└── reference/
+│
+└── reference/                             <-- Golden Standard Reference Documents
     ├── CP_Report_Format.docx              <-- Institutional raw format template
     ├── CP_Report_Format.pdf               <-- Institutional format PDF guide
     ├── Range_Intelligence_Course_Project_Report.docx  <-- 54-page reference Word doc
