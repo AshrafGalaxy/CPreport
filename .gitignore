@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.tmp
+.DS_Store
+Thumbs.db
+output/
+Course_Project_Report.docx
+Course_Project_Report.pdf
